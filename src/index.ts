@@ -41,7 +41,7 @@ export interface VideoDetails {
     thumbnails: VideoThumbnail[];
   };
   allowRatings?: boolean;
-  viewCount?: ViewCount;
+  viewCount?: ViewCount | number;
   author?: string;
   isPrivate?: boolean;
   isUnpluggedCorpus?: boolean;

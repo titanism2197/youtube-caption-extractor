@@ -1,41 +1,47 @@
 interface Subtitle {
-    start: string;
-    dur: string;
-    text: string;
+  start: string;
+  dur: string;
+  text: string;
 }
 export interface Options {
-    videoID: string;
-    lang?: string;
+  videoID: string;
+  lang?: string;
 }
 interface VideoThumbnail {
-    url: string;
-    width: number;
-    height: number;
+  url: string;
+  width: number;
+  height: number;
 }
 interface ViewCount {
-    high: number;
-    low: number;
+  high: number;
+  low: number;
 }
 export interface VideoDetails {
-    videoId?: string;
-    title?: string;
-    lengthSeconds?: string;
-    keywords?: string[];
-    channelId?: string;
-    isOwnerViewing?: boolean;
-    shortDescription?: string;
-    isCrawlable?: boolean;
-    thumbnail?: {
-        thumbnails: VideoThumbnail[];
-    };
-    allowRatings?: boolean;
-    viewCount?: ViewCount;
-    author?: string;
-    isPrivate?: boolean;
-    isUnpluggedCorpus?: boolean;
-    isLiveContent?: boolean;
-    subtitles?: Subtitle[];
+  videoId?: string;
+  title?: string;
+  lengthSeconds?: string;
+  keywords?: string[];
+  channelId?: string;
+  isOwnerViewing?: boolean;
+  shortDescription?: string;
+  isCrawlable?: boolean;
+  thumbnail?: {
+    thumbnails: VideoThumbnail[];
+  };
+  allowRatings?: boolean;
+  viewCount?: ViewCount | number;
+  author?: string;
+  isPrivate?: boolean;
+  isUnpluggedCorpus?: boolean;
+  isLiveContent?: boolean;
+  subtitles?: Subtitle[];
 }
-export declare const getVideoDetails: ({ videoID, lang, }: Options) => Promise<VideoDetails>;
-export declare const getSubtitles: ({ videoID, lang, }: Options) => Promise<Subtitle[]>;
+export declare const getVideoDetails: ({
+  videoID,
+  lang,
+}: Options) => Promise<VideoDetails>;
+export declare const getSubtitles: ({
+  videoID,
+  lang,
+}: Options) => Promise<Subtitle[]>;
 export {};
