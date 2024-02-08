@@ -1,7 +1,5 @@
 import he from "he";
 import striptags from "striptags";
-import * as fs from "fs";
-import * as path from "path";
 
 interface Subtitle {
   start: string;
