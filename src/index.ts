@@ -1,5 +1,7 @@
-import he from 'he';
-import striptags from 'striptags';
+import he from "he";
+import striptags from "striptags";
+import * as fs from "fs";
+import * as path from "path";
 
 interface Subtitle {
   start: string;
@@ -17,38 +19,68 @@ export interface Options {
   lang?: string;
 }
 
+interface VideoThumbnail {
+  url: string;
+  width: number;
+  height: number;
+}
+
 export interface VideoDetails {
-  title: string;
-  description: string;
-  subtitles: Subtitle[];
+  videoId?: string;
+  title?: string;
+  lengthSeconds?: string;
+  keywords?: string[];
+  channelId?: string;
+  isOwnerViewing?: boolean;
+  shortDescription?: string;
+  isCrawlable?: boolean;
+  thumbnail?: {
+    thumbnails: VideoThumbnail[];
+  };
+  allowRatings?: boolean;
+  viewCount?: string;
+  author?: string;
+  isPrivate?: boolean;
+  isUnpluggedCorpus?: boolean;
+  isLiveContent?: boolean;
+  subtitles?: Subtitle[];
 }
 
 export const getVideoDetails = async ({
   videoID,
-  lang = 'en',
+  lang = "en",
 }: Options): Promise<VideoDetails> => {
   const response = await fetch(`https://youtube.com/watch?v=${videoID}`);
   const data = await response.text();
 
-  // Extract title and description from the page data
-  const titleMatch = data.match(
-    /<meta name="title" content="([^"]*|[^"]*[^&]quot;[^"]*)">/
-  );
-  const descriptionMatch = data.match(
-    /<meta name="description" content="([^"]*|[^"]*[^&]quot;[^"]*)">/
+  // Attempt to find the ytInitialPlayerResponse object within the script tag
+  const ytInitialPlayerResponseMatch = data.match(
+    /var ytInitialPlayerResponse = ({.*?});<\/script>/s
   );
 
-  const title = titleMatch ? titleMatch[1] : 'No title found';
-  const description = descriptionMatch
-    ? descriptionMatch[1]
-    : 'No description found';
+  // Initialize an object to hold the parsed video details
+  let parsedVideoDetails: VideoDetails = {};
+
+  if (ytInitialPlayerResponseMatch) {
+    // Extract the JSON-like string
+    const ytInitialPlayerResponseStr = ytInitialPlayerResponseMatch[1];
+    try {
+      // Parse the string to a JavaScript object
+      const ytInitialPlayerResponseObj = JSON.parse(ytInitialPlayerResponseStr);
+      // Access the videoDetails key
+      parsedVideoDetails = ytInitialPlayerResponseObj.videoDetails;
+    } catch (error) {
+      console.error("Failed to parse ytInitialPlayerResponse:", error);
+    }
+  } else {
+    console.warn("ytInitialPlayerResponse object not found in the page data.");
+  }
 
   // Check if the video page contains captions
-  if (!data.includes('captionTracks')) {
+  if (!data.includes("captionTracks")) {
     console.warn(`No captions found for video: ${videoID}`);
     return {
-      title,
-      description,
+      ...parsedVideoDetails,
       subtitles: [],
     };
   }
@@ -60,8 +92,7 @@ export const getVideoDetails = async ({
   if (!regexResult) {
     console.warn(`Failed to extract captionTracks from video: ${videoID}`);
     return {
-      title,
-      description,
+      ...parsedVideoDetails,
       subtitles: [],
     };
   }
@@ -81,8 +112,7 @@ export const getVideoDetails = async ({
   if (!subtitle?.baseUrl) {
     console.warn(`Could not find ${lang} captions for ${videoID}`);
     return {
-      title,
-      description,
+      ...parsedVideoDetails,
       subtitles: [],
     };
   }
@@ -97,9 +127,9 @@ export const getVideoDetails = async ({
 
   // Process the subtitles XML to create an array of subtitle objects
   const lines = transcript
-    .replace('<?xml version="1.0" encoding="utf-8" ?><transcript>', '')
-    .replace('</transcript>', '')
-    .split('</text>')
+    .replace('<?xml version="1.0" encoding="utf-8" ?><transcript>', "")
+    .replace("</transcript>", "")
+    .split("</text>")
     .filter((line: string) => line && line.trim())
     .reduce((acc: Subtitle[], line: string) => {
       // Extract start and duration times using regex patterns
@@ -116,9 +146,9 @@ export const getVideoDetails = async ({
 
       // Clean up subtitle text by removing HTML tags and decoding HTML entities
       const htmlText = line
-        .replace(/<text.+>/, '')
-        .replace(/&amp;/gi, '&')
-        .replace(/<\/?[^>]+(>|$)/g, '');
+        .replace(/<text.+>/, "")
+        .replace(/&amp;/gi, "&")
+        .replace(/<\/?[^>]+(>|$)/g, "");
       const decodedText = he.decode(htmlText);
       const text = striptags(decodedText);
 
@@ -133,22 +163,21 @@ export const getVideoDetails = async ({
     }, []);
 
   return {
-    title,
-    description,
+    ...parsedVideoDetails,
     subtitles: lines,
   };
 };
 
 export const getSubtitles = async ({
   videoID,
-  lang = 'en',
+  lang = "en",
 }: Options): Promise<Subtitle[]> => {
   // Fetch YouTube video page data
   const response = await fetch(`https://youtube.com/watch?v=${videoID}`);
   const data = await response.text();
 
   // Check if the video page contains captions
-  if (!data.includes('captionTracks')) {
+  if (!data.includes("captionTracks")) {
     console.warn(`No captions found for video: ${videoID}`);
     return [];
   }
@@ -189,9 +218,9 @@ export const getSubtitles = async ({
 
   // Process the subtitles XML to create an array of subtitle objects
   const lines = transcript
-    .replace('<?xml version="1.0" encoding="utf-8" ?><transcript>', '')
-    .replace('</transcript>', '')
-    .split('</text>')
+    .replace('<?xml version="1.0" encoding="utf-8" ?><transcript>', "")
+    .replace("</transcript>", "")
+    .split("</text>")
     .filter((line: string) => line && line.trim())
     .reduce((acc: Subtitle[], line: string) => {
       // Extract start and duration times using regex patterns
@@ -208,9 +237,9 @@ export const getSubtitles = async ({
 
       // Clean up subtitle text by removing HTML tags and decoding HTML entities
       const htmlText = line
-        .replace(/<text.+>/, '')
-        .replace(/&amp;/gi, '&')
-        .replace(/<\/?[^>]+(>|$)/g, '');
+        .replace(/<text.+>/, "")
+        .replace(/&amp;/gi, "&")
+        .replace(/<\/?[^>]+(>|$)/g, "");
       const decodedText = he.decode(htmlText);
       const text = striptags(decodedText);
 
