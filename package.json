@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devhims/youtube-caption-extractor.git"
+    "url": "https://github.com/titanism2197/youtube-caption-extractor.git"
   },
   "bugs": {
-    "url": "https://github.com/devhims/youtube-caption-extractor/issues"
+    "url": "https://github.com/titanism2197/youtube-caption-extractor/issues"
   },
-  "homepage": "https://github.com/devhims/youtube-caption-extractor",
+  "homepage": "https://github.com/titanism2197/youtube-caption-extractor",
   "license": "ISC",
   "dependencies": {
     "@types/he": "^1.2.0",
