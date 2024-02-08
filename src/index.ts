@@ -23,6 +23,11 @@ interface VideoThumbnail {
   height: number;
 }
 
+interface ViewCount {
+  high: number;
+  low: number;
+}
+
 export interface VideoDetails {
   videoId?: string;
   title?: string;
@@ -36,7 +41,7 @@ export interface VideoDetails {
     thumbnails: VideoThumbnail[];
   };
   allowRatings?: boolean;
-  viewCount?: string;
+  viewCount?: ViewCount;
   author?: string;
   isPrivate?: boolean;
   isUnpluggedCorpus?: boolean;
